@@ -42,7 +42,60 @@ func main() {
 	for _, m := range ms {
 		fmt.Println(m)
 	}
+
+	k := Jade
+	fmt.Println("k: ", k)
+	fmt.Println("k: ", Key(18))
+
+	p1.FoundKey(Jade)
+	fmt.Println(p1.Keys)
+	p1.FoundKey(Jade)
+	fmt.Println(p1.Keys)
 }
+
+func (p *Player) FoundKey(k Key) error {
+	if k < Jade || k >= invalidKey {
+		return fmt.Errorf("Invalid Key: %#v", k)
+	}
+	if !containsKey(p.Keys, k) {
+		p.Keys = append(p.Keys, k)
+	}
+	return nil
+}
+
+func containsKey(keys []Key, k Key) bool {
+	for _, key := range keys {
+		if key == k {
+			return true
+		}
+	}
+	return false
+}
+
+// implement fmt.Stringer interface
+func (k Key) String() string {
+	switch k {
+	case Jade:
+		return "jade"
+	case Copper:
+		return "copper"
+	case Crystal:
+		return "crystal"
+	}
+
+	// return fmt.Sprintf("<Key %s>", k) // error: causes recursive method call
+	return fmt.Sprintf("<Key %d>", k)
+}
+
+// Go's version of "enum"
+const (
+	Jade Key = iota + 1
+	Copper
+	Crystal
+	invalidKey // internal (not exported)
+)
+
+type Key byte
 
 func moveAll(ms []mover, x, y int) {
 	for _, m := range ms {
@@ -57,6 +110,7 @@ type mover interface {
 type Player struct {
 	Name string
 	Item // Embed item
+	Keys []Key
 }
 
 // i is called "the receiver"
