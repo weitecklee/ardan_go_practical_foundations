@@ -64,9 +64,41 @@ func main() {
 	fmt.Printf("closed: %#v\n", msg)
 
 	msg, ok := <-ch
-	fmt.Printf("closed: %#v (ok=%v)", msg, ok)
+	fmt.Printf("closed: %#v (ok=%v)\n", msg, ok)
 
 	// ch <- "hi" // ch is closed -> panic
+
+	values := []int{15, 8, 42, 16, 4, 23}
+	fmt.Println(sleepSort(values))
+
+}
+
+func sleepSort(values []int) []int {
+	ch := make(chan int)
+	sorted := make([]int, 0, len(values))
+	// max := 0
+	for _, v := range values {
+		v := v
+		// if v > max {
+		// 	max = v
+		// }
+		go func() {
+			time.Sleep(time.Millisecond * time.Duration(v))
+			ch <- v
+		}()
+	}
+	// go func() {
+	// 	time.Sleep(time.Millisecond * time.Duration(max*2))
+	// 	close(ch)
+	// }()
+	// for v := range ch {
+	// 	sorted = append(sorted, v)
+	// }
+
+	for range values { // for i := 0; i < len(values); i++ {
+		sorted = append(sorted, <-ch)
+	}
+	return sorted
 }
 
 /* Channel semantics:
