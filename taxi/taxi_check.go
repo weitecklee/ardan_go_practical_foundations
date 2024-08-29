@@ -83,18 +83,30 @@ func main() {
 
 	start := time.Now()
 	ok := true
+	ch := make(chan error)
 	for name, signature := range sigs {
-		fileName := path.Join(rootDir, name) + ".bz2"
-		sig, err := fileSig(fileName)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %s - %s\n", fileName, err)
-			ok = false
-			continue
-		}
+		name := name
+		signature := signature
+		go func() {
+			fileName := path.Join(rootDir, name) + ".bz2"
+			sig, err := fileSig(fileName)
+			if err != nil {
+				ch <- fmt.Errorf("error: %s - %s\n", fileName, err)
+				return
+			}
 
-		if sig != signature {
+			if sig != signature {
+				ch <- fmt.Errorf("error: %s mismatch\n", fileName)
+			} else {
+				ch <- nil
+			}
+		}()
+	}
+	for range sigs {
+		err := <-ch
+		if err != nil {
+			fmt.Println(err)
 			ok = false
-			fmt.Printf("error: %s mismatch\n", fileName)
 		}
 	}
 
@@ -104,3 +116,15 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+/*
+INITIAL RUNS
+processed 10 files in 4.446374799s
+processed 10 files in 4.494781805s
+processed 10 files in 4.515078314s
+
+MY VERSION
+processed 10 files in 1.084789634s
+processed 10 files in 1.057671048s
+processed 10 files in 1.089251565s
+*/
