@@ -83,30 +83,25 @@ func main() {
 
 	start := time.Now()
 	ok := true
-	ch := make(chan error)
+	ch := make(chan Result)
 	for name, signature := range sigs {
 		name := name
 		signature := signature
 		go func() {
 			fileName := path.Join(rootDir, name) + ".bz2"
-			sig, err := fileSig(fileName)
-			if err != nil {
-				ch <- fmt.Errorf("error: %s - %s\n", fileName, err)
-				return
-			}
-
-			if sig != signature {
-				ch <- fmt.Errorf("error: %s mismatch\n", fileName)
-			} else {
-				ch <- nil
-			}
+			go sigWorker(fileName, signature, ch)
 		}()
 	}
 	for range sigs {
-		err := <-ch
-		if err != nil {
-			fmt.Println(err)
+		r := <-ch
+		if r.err != nil {
+			fmt.Fprintf(os.Stderr, "error: %s - %s\n", r.fileName, r.err)
 			ok = false
+			continue
+		}
+
+		if !r.match {
+			fmt.Printf("error: %s mismatch\n", r.fileName)
 		}
 	}
 
@@ -115,6 +110,25 @@ func main() {
 	if !ok {
 		os.Exit(1)
 	}
+}
+
+// can specify channel direction (chan<- | <-chan) if only
+// one direction used, easier to catch errors
+func sigWorker(fileName, signature string, ch chan<- Result) {
+	r := Result{fileName: fileName}
+	sig, err := fileSig(fileName)
+	if err != nil {
+		r.err = err
+	} else {
+		r.match = sig == signature
+	}
+	ch <- r
+}
+
+type Result struct {
+	fileName string
+	match    bool
+	err      error
 }
 
 /*
@@ -127,4 +141,9 @@ MY VERSION
 processed 10 files in 1.084789634s
 processed 10 files in 1.057671048s
 processed 10 files in 1.089251565s
+
+MIKI's VERSION
+processed 10 files in 1.205265095s
+processed 10 files in 1.108197166s
+processed 10 files in 1.129362825s
 */
