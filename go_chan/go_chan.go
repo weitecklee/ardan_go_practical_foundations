@@ -103,6 +103,7 @@ func sleepSort(values []int) []int {
 
 /* Channel semantics:
 - send & receive will block until opposite directions (with exceptions)
+	- buffered channel has cap(ch) non-blocking sends
 - receive from closed channel will return zero value without blocking
 - send to closed channel will panic
 - closing closed channel will panic
