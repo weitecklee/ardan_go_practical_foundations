@@ -12,7 +12,7 @@ func ExampleTokenize() {
 	fmt.Println(tokens)
 
 	// Output:
-	// [who s on first]
+	// [who on first]
 }
 
 func Example_tokenize() {
@@ -21,7 +21,7 @@ func Example_tokenize() {
 	fmt.Println(tokens)
 
 	// Output:
-	// [who s on second]
+	// [who on second]
 }
 
 /*
